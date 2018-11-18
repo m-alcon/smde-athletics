@@ -49,8 +49,20 @@ def add_extra_info(df):
     dei = pd.read_csv('../data/races_info.csv')
     return pd.merge(df,dei)
 
+def mile_to_km(x):
+    return(x*1.609344)
+
+def preprocess_elevation():
+    de = pd.read_csv('../data/elevation_changes.csv')
+    dp = pd.DataFrame(columns=['Km','Elevation'])
+    dp['Km'] = de['Mileage'].apply(lambda x: x*1.609344)
+    dp['Elevation'] = de['Elevation'].apply(lambda x: x*0.3048)
+    return dp
+
 if __name__ == '__main__':
     df = preprocess()
     # df = add_extra_info(df)
     # print(df[df['Fitness']<0.1])
     df.to_csv('../data/processed_marathon.csv',index=False)
+    dpec = preprocess_elevation()
+    dpec.to_csv('../data/preprocessed_elevation_changes.csv',index=False)
