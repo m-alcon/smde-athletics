@@ -21,7 +21,7 @@ def preprocess():
     d15['Year'] = 2015
     d16['Year'] = 2016
     d17['Year'] = 2017
-    df = pd.concat([d15,d16,d17], ignore_index=True)
+    df = pd.concat([d15,d16,d17], ignore_index=True, sort=False)
     df = df.replace('-', np.nan)
     df = df.dropna(subset=['Bib','Age','M/F','Country','5K','10K','15K','20K','25K','30K','35K','40K','Official Time'])
 
@@ -45,6 +45,12 @@ def preprocess():
 
     return df[['Year','Age','M/F','Country','Fitness','Stage1','Stage2','Stage3','Stage4','Stage5','Stage6','Stage7','Stage8']]
 
+def add_extra_info(df):
+    dei = pd.read_csv('../data/races_info.csv')
+    return pd.merge(df,dei)
+
 if __name__ == '__main__':
     df = preprocess()
+    # df = add_extra_info(df)
+    # print(df[df['Fitness']<0.1])
     df.to_csv('../data/processed_marathon.csv',index=False)
