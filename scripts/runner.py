@@ -4,26 +4,25 @@ from sklearn import linear_model
 class Runner:
     __models = {}
 
-    def __init__(self,runners_data,race_data):
-        self.runners_data = runners_data
-        self.race_data = race_data
-        self.to_predict_names = ['Stage1','Stage2','Stage3','Stage4',
+    def __init__(self,runners_data_path, elevation_data_path):
+        self.runners_data = pd.read_csv(runners_data_path)
+        self.elevation_data = pd.read_csv(elevation_data_path)
+        self.to_predict_names = ['Stage0','Stage1','Stage2','Stage3','Stage4',
             'Stage5','Stage6','Stage7','Stage8']
         self.__fit()
 
-    def __fit():
+    def __fit(self):
         for name in self.to_predict_names:
+            X = self.runners_data.drop(self.to_predict_names,axis=1)
+            X['Elevation'] = self.elevation_data[self.elevation_data['Stage']==name]['Elevation']
             self.__models[name] = linear_model.LinearRegression()
-            self.__models[name].fit(
-                self.runners_data.drop(self.to_predict_names,axis=1),
-                self.runners_data[name]
-            )
-    def predict(stage,data):
+            self.__models[name].fit(X,self.runners_data[name])
+    def predict(self,stage,data):
         return self.__models[stage].predict(data)
 
 if __name__ == '__main__':
-    runners_data = pd.read_csv('../data/processed_marathon.csv')
-    race_data = pd.read_csv('../data/races_info.csv')
-    runner = Runner(runners_data,race_data)
+    runners_data_path = '../data/final_marathon.csv'
+    elevation_data_path = '../data/final_elevation_changes.csv'
+    runner = Runner(runners_data_path,elevation_data_path)
 
 
