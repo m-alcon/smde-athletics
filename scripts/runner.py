@@ -14,7 +14,8 @@ class Runner:
     def __fit(self):
         for name in self.to_predict_names:
             X = self.runners_data.drop(self.to_predict_names,axis=1)
-            X['Elevation'] = self.elevation_data[self.elevation_data['Stage']==name]['Elevation']
+            elevation = self.elevation_data[self.elevation_data['Stage']==name]['Elevation']
+            X['Elevation'] = float(elevation)
             self.__models[name] = linear_model.LinearRegression()
             self.__models[name].fit(X,self.runners_data[name])
     def predict(self,stage,data):

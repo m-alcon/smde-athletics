@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
-from scipy.interpolate import InterpolatedUnivariateSpline
 import matplotlib.pyplot as plt
+from scipy.interpolate import InterpolatedUnivariateSpline
+from sklearn import preprocessing
+
+run_one_hot = False
 
 def time_to_sec(t):
     t = t.split(':')
@@ -15,7 +18,13 @@ def erase_F(s):
         s = s[1:]
     return s
 
+def before_one_hot(col):
+    ohe = preprocessing.OneHotEncoder(sparse=False)
+    ohe_col = np.transpose(ohe.fit_transform(col.values.reshape(len(col),1)))
+    return ohe_col
+
 def preprocess():
+
     d15 = pd.read_csv('../data/marathon_results_2015.csv')
     d16 = pd.read_csv('../data/marathon_results_2016.csv')
     d17 = pd.read_csv('../data/marathon_results_2017.csv')
@@ -43,13 +52,62 @@ def preprocess():
     df['Fitness'] = [int(erase_F(x)) for x in df['Bib']]
     nmax = max(df['Fitness'])
     df['Fitness'] = [(1000*x)/nmax for x in df['Fitness']]
-    print(max(df['Fitness']))
-    print(min(df['Fitness']))
+    #print(max(df['Fitness']))
+    #print(min(df['Fitness']))
 
-    return df[['Year','Age','M/F','Country','Fitness','Stage0','Stage1','Stage2','Stage3','Stage4','Stage5','Stage6','Stage7','Stage8']]
+    # Label Encoder
+    le = preprocessing.LabelEncoder()
+    gender_cat = list(df['M/F'].astype('category').cat.categories)
+    country_cat = list(df['Country'].astype('category').cat.categories)
+    df['Gender'] = le.fit_transform(df['M/F'])
+    copy_country = df['Country']
+    df['Country'] = le.fit_transform(df['Country'])
+
+    # OneHot Encoder
+    if run_one_hot:
+        gender_oh = before_one_hot(df['Gender'])
+        country_oh = before_one_hot(df['Country'])
+        not_eq_counter = 0
+        for i,c in enumerate(gender_cat):
+            df[c] = gender_oh[i]
+            if sum(df[c]) != sum(df['M/F'] == c):
+                not_eq_counter += 1
+        print('OneHot Gender differences: %d'%not_eq_counter)
+        not_eq_counter = 0
+        for i,c in enumerate(country_cat):
+            df[c] = country_oh[i]
+            if sum(df[c]) != sum(copy_country == c):
+                not_eq_counter += 1
+        print('OneHot Country differences: %d'%not_eq_counter)
+        final_columns = ['Year','Age']+ gender_cat + country_cat + ['Stage0',
+        'Stage1','Stage2','Stage3','Stage4','Stage5','Stage6','Stage7','Stage8']
+
+        return df[final_columns]
+    else:
+        return df[['Year','Age','Gender','Country','Fitness','Stage0','Stage1',
+                'Stage2','Stage3','Stage4','Stage5','Stage6','Stage7','Stage8']]
+
+
 
 def add_race_info(df):
     dei = pd.read_csv('../data/races_info.csv')
+
+    # Label Encoder
+    le = preprocessing.LabelEncoder()
+    weather_cat = list(dei['Weather'].astype('category').cat.categories)
+    copy_weather = dei['Weather']
+    dei['Weather'] = le.fit_transform(dei['Weather'])
+
+    if run_one_hot:
+        weather_oh = before_one_hot(dei['Weather'])
+        not_eq_counter = 0
+        for i,c in enumerate(weather_cat):
+            dei[c] = weather_oh[i]
+            if sum(dei[c]) != sum(copy_weather == c):
+                not_eq_counter += 1
+        dei = dei.drop(['Weather'],axis=1)
+        print('OneHot Weather differences: %d'%not_eq_counter)
+
     return pd.merge(df,dei)
 
 def mile_to_km(x):
@@ -82,8 +140,6 @@ def preprocess_elevation():
 if __name__ == '__main__':
     df = preprocess()
     df = add_race_info(df)
-    # # print(df[df['Fitness']<0.1])
     df.to_csv('../data/final_marathon.csv',index=False)
     dpec = preprocess_elevation()
-    print(dpec)
     dpec.to_csv('../data/final_elevation_changes.csv',index=False)
