@@ -1,0 +1,4 @@
+1 - Canviar fitness (threshold)
+2 - Treure prediciton i passar-ho a coeficients
+3 - Afegir normality function
+4 - Black box validation
