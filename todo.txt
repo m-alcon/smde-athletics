@@ -1,5 +1,5 @@
   1 - Canviar fitness (threshold)
 X 2 - Treure prediciton i passar-ho a coeficients
-  3 - Afegir normality function
+X 3 - Afegir normality function
   4 - Black box validation.
   5 - Assumptions

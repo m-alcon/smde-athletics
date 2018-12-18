@@ -36,13 +36,19 @@ class Runner:
         data = np.append(data,elevation)
         #print(self.__models[stage].predict([data]))
         #print(np.sum(np.array(self.__coefs[stage]) * np.array(data)) + self.__intercepts[stage])
-        return np.sum(np.array(self.__coefs[stage]) * np.array(data)) + self.__intercepts[stage]
+        prediction = np.sum(np.array(self.__coefs[stage]) * np.array(data)) + self.__intercepts[stage]
+        if stage == 'Stage8':
+            noise = np.random.normal(0,120,1)[0]
+        else: 
+            noise = np.random.normal(0,60,1)[0]
+        print('pred: ',prediction,prediction+noise)
+        return prediction + noise
 
     def run_marathon(self,data):
         total_time = 0
         for stage in self.to_predict_names:
             total_time += self.predict(stage,data.values)
-        self.total_time = total_time[0]
+        self.total_time = total_time
         #self.total_time += np.random.normal(0.5,0.5)
         return self.total_time
 
@@ -55,8 +61,10 @@ if __name__ == '__main__':
     X = test.drop(Runner.to_predict_names, axis=1)
     X = X.drop(Runner.unused_columns,axis=1)
     y = test[Runner.to_predict_names]
+    res = 0
     for i in range(len(X)):
         pred = runner.run_marathon(X.iloc[i])
+        res += sum(y.iloc[i])
         print(pred, sum(y.iloc[i]))
 
 
