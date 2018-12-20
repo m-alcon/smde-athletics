@@ -19,26 +19,25 @@ class Runner:
     def __fit(self):
         for name in self.to_predict_names:
             X = self.runners_data.drop(self.to_predict_names,axis=1)
-            elevation = self.elevation_data[self.elevation_data['Stage']==name]['Elevation']
-            X['Elevation'] = float(elevation)
+            #elevation = self.elevation_data[self.elevation_data['Stage']==name]['Elevation']
+            #X['Elevation'] = float(elevation)
             model = linear_model.LinearRegression()
             self.__coefs[name] = model.fit(X,self.runners_data[name]).coef_
             self.__intercepts[name] = model.fit(X,self.runners_data[name]).intercept_
             #self.__models[name] = model
-            print(X.columns.values.tolist())
-            print(self.__coefs[name])
+            #print(X.columns.values.tolist())
+            #print(self.__coefs[name])
 
     def predict(self,stage,data):
-        elevation = self.elevation_data[self.elevation_data['Stage']==stage]['Elevation']
-        data = np.append(data,elevation)
+        #elevation = self.elevation_data[self.elevation_data['Stage']==stage]['Elevation']
+        #data = np.append(data,elevation)
         #print(self.__models[stage].predict([data]))
         #print(np.sum(np.array(self.__coefs[stage]) * np.array(data)) + self.__intercepts[stage])
         prediction = np.sum(np.array(self.__coefs[stage]) * np.array(data)) + self.__intercepts[stage]
         if stage == 'Stage8':
-            noise = np.random.normal(0,120,1)[0]
-        else: 
             noise = np.random.normal(0,60,1)[0]
-        print('pred: ',prediction,prediction+noise)
+        else: 
+            noise = np.random.normal(0,120,1)[0]
         return prediction + noise
 
     def run_marathon(self,data):

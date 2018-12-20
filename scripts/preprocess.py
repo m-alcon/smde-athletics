@@ -142,7 +142,7 @@ def preprocess_elevation():
 if __name__ == '__main__':
     df = preprocess()
     train, test = train_test_split(df,
-                            test_size=0.005, random_state=42)
+                        test_size=0.005, random_state=42)
     train.to_csv('../data/final_marathon_train.csv',index=False)
     test.to_csv('../data/final_marathon_test.csv',index=False)
     #df.to_csv('../data/final_marathon.csv',index=False)
