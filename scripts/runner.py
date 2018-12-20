@@ -53,9 +53,17 @@ class Runner:
         return self.total_time
 
 if __name__ == '__main__':
-    runners_data_path = pd.read_csv('../data/final_marathon.csv')
-    train, test = train_test_split(runners_data_path,
-                        test_size=0.005, random_state=42)
+    new_partition = True
+
+    if new_partition:
+        runners_data_path = pd.read_csv('../data/final_marathon.csv')
+        train, test = train_test_split(runners_data_path,
+                            test_size=0.005, random_state=42)
+        train.to_csv('../data/final_marathon_train.csv',index=False)
+        test.to_csv('../data/final_marathon_test.csv',index=False)
+    else:
+        train = pd.read_csv('../data/final_marathon_train.csv')
+        train = pd.read_csv('../data/final_marathon_test.csv')
     elevation_data_path = pd.read_csv('../data/final_elevation_changes.csv')
     runner = Runner(train,elevation_data_path)
     X = test.drop(Runner.to_predict_names, axis=1)
