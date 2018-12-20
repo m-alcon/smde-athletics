@@ -51,7 +51,8 @@ def preprocess():
 
     df['Fitness'] = [int(erase_F(x)) for x in df['Bib']]
     nmax = max(df['Fitness'])
-    df['Fitness'] = [(1000*x)/nmax for x in df['Fitness']]
+    fitness_threshold = 23000
+    df['Fitness'] = [(1000*x)/fitness_threshold if x<fitness_threshold else 1000 for x in df['Fitness']]
     #print(max(df['Fitness']))
     #print(min(df['Fitness']))
 
