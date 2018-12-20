@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.interpolate import InterpolatedUnivariateSpline
 from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 run_one_hot = False
 
@@ -32,7 +33,7 @@ def preprocess():
     d15['Year'] = 2015
     d16['Year'] = 2016
     d17['Year'] = 2017
-    df = pd.concat([d15,d16,d17], ignore_index=True)
+    df = pd.concat([d15,d16,d17], ignore_index=True, sort=False)
     df = df.replace('-', np.nan)
     df = df.dropna(subset=['Bib','Age','M/F','Country','5K','10K','15K','20K','25K','30K','35K','40K','Official Time'])
 
@@ -85,7 +86,7 @@ def preprocess():
 
         return df[final_columns]
     else:
-        return df[['Year','Age','Gender','Country','Fitness','Stage0','Stage1',
+        return df[['Age','Gender','Fitness','Stage0','Stage1',
                 'Stage2','Stage3','Stage4','Stage5','Stage6','Stage7','Stage8']]
 
 
@@ -140,7 +141,10 @@ def preprocess_elevation():
 
 if __name__ == '__main__':
     df = preprocess()
-    df = add_race_info(df)
-    df.to_csv('../data/final_marathon.csv',index=False)
+    train, test = train_test_split(df,
+                        test_size=0.005, random_state=42)
+    train.to_csv('../data/final_marathon_train.csv',index=False)
+    test.to_csv('../data/final_marathon_test.csv',index=False)
+    #df.to_csv('../data/final_marathon.csv',index=False)
     dpec = preprocess_elevation()
     dpec.to_csv('../data/final_elevation_changes.csv',index=False)
