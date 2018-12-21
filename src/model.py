@@ -9,9 +9,9 @@ class Model(object):
     def __init__(self, coefs, intercept, residuals):
         self.coefs = coefs
         self.intercept = intercept
-    
+
     def test_assumptions(self):
         print("Test Durbin-Watson")
-        
+
         print("Test Breusch-Pagan")
         print("Test Shapiro")

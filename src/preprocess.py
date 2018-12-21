@@ -33,7 +33,7 @@ def preprocess():
     d15['Year'] = 2015
     d16['Year'] = 2016
     d17['Year'] = 2017
-    df = pd.concat([d15,d16,d17], ignore_index=True, sort=False)
+    df = pd.concat([d15,d16,d17], ignore_index=True)
     df = df.replace('-', np.nan)
     df = df.dropna(subset=['Bib','Age','M/F','Country','5K','10K','15K','20K','25K','30K','35K','40K','Official Time'])
 
@@ -141,6 +141,7 @@ def preprocess_elevation():
 
 if __name__ == '__main__':
     df = preprocess()
+    df.to_csv('../data/final_marathon.csv',index=False)
     train, test = train_test_split(df,
                         test_size=0.005, random_state=42)
     train.to_csv('../data/final_marathon_train.csv',index=False)

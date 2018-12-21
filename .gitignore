@@ -33,3 +33,5 @@
 
 # Mine
 .vscode/
+__pycache__/
+.Rhistory
