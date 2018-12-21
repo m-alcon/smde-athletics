@@ -5,7 +5,7 @@ import runner
 class Experiment(object):
 
     n = 10
-    t = 3.250
+    t = 2.262
 
     def __init__ (self,low,high,runner):
         self.low = low
@@ -13,49 +13,38 @@ class Experiment(object):
         self.runner = runner
         self.table_2k = None
         self.table_yates = None
-        self.data_interval = {'table': [], 'mean': 0, 'std': 0, 'h': 0}
+        self.data_interval = {'means': [], 'stds': [], 'h': 0}
 
-    def confidence_interval(self):
-        all_runs = []
-        for i in range(self.n):
-            all_runs.append(self.runner.run_marathon([self.low[0],self.low[1],self.low[2]]))
-        self.data_interval['mean'] = np.mean(all_runs)
-        self.data_interval['std'] = np.std(all_runs)
-        self.data_interval['h'] = self.t * np.std(all_runs)/np.sqrt(self.n)
-        self.data_interval['table'] = pd.DataFrame(data={'Result': all_runs})
-        self.data_interval['interval'] = (self.data_interval['mean']-self.data_interval['h'],
-                                        self.data_interval['mean']+self.data_interval['h'])
-
-    def _mean_running_repetitions (self,data_runner):
+    def _running_repetitions (self,data_runner):
         all_runs = []
         for i in range(self.n):
             all_runs.append(self.runner.run_marathon([data_runner[0],data_runner[1],data_runner[2]]))
-        return np.mean(all_runs)
+        return np.mean(all_runs), np.std(all_runs)
 
     def configuration_2k(self):
-        answers = []
-        answers.append(self._mean_running_repetitions(
-            [self.low[0],self.low[1],self.low[2]]))
-        answers.append(self._mean_running_repetitions(
-            [self.high[0],self.low[1],self.low[2]]))
-        answers.append(self._mean_running_repetitions(
-            [self.low[0],self.high[1],self.low[2]]))
-        answers.append(self._mean_running_repetitions(
-            [self.high[0],self.high[1],self.low[2]]))
-        answers.append(self._mean_running_repetitions(
-            [self.low[0],self.low[1],self.high[2]]))
-        answers.append(self._mean_running_repetitions(
-            [self.high[0],self.low[1],self.high[2]]))
-        answers.append(self._mean_running_repetitions(
-            [self.low[0],self.high[1],self.high[2]]))
-        answers.append(self._mean_running_repetitions(
-            [self.high[0],self.high[1],self.high[2]]))
+        m1,s1 = self._running_repetitions(
+            [self.low[0],self.low[1],self.low[2]])
+        m2,s2 = self._running_repetitions(
+            [self.high[0],self.low[1],self.low[2]])
+        m3,s3 = self._running_repetitions(
+            [self.low[0],self.high[1],self.low[2]])
+        m4,s4 = self._running_repetitions(
+            [self.high[0],self.high[1],self.low[2]])
+        m5,s5 = self._running_repetitions(
+            [self.low[0],self.low[1],self.high[2]])
+        m6,s6 = self._running_repetitions(
+            [self.high[0],self.low[1],self.high[2]])
+        m7,s7 = self._running_repetitions(
+            [self.low[0],self.high[1],self.high[2]])
+        m8,s8 = self._running_repetitions(
+            [self.high[0],self.high[1],self.high[2]])
+        self.data_interval['means'] = [m1,m2,m3,m4,m5,m6,m7,m8]
+        self.data_interval['stds'] = [s1,s2,s3,s4,s5,s6,s7,s8]
         self.table_2k = pd.DataFrame()
         self.table_2k['Age'] = [self.low[0],self.high[0],self.low[0],self.high[0],self.low[0],self.high[0],self.low[0],self.high[0]]
         self.table_2k['Gender'] = [self.low[1],self.low[1],self.high[1],self.high[1],self.low[1],self.low[1],self.high[1],self.high[1]]
         self.table_2k['Fitness'] = [self.low[2],self.low[2],self.low[2],self.low[2],self.high[2],self.high[2],self.high[2],self.high[2]]
-        self.table_2k['Results'] = answers
-        return answers
+        self.table_2k['Results'] = list([m1,m2,m3,m4,m5,m6,m7,m8])
 
     def _generate_effects (self,answers):
         res = [None]*8
@@ -69,7 +58,8 @@ class Experiment(object):
         res[7] = answers[7] - answers[6]
         return res
 
-    def yates_algorithm (self,answers):
+    def yates_algorithm (self):
+        answers = self.data_interval['means']
         self.table_yates = pd.DataFrame()
         c1 = self._generate_effects(answers)
         self.table_yates['(1)'] = c1
@@ -82,22 +72,31 @@ class Experiment(object):
         self.table_yates['Effect'] = effect
         return effect
 
-    def run(self):
-        print('################### CONFIDENCE INTERVAL ###################')
-        self.confidence_interval()
-        print('mean:',self.data_interval['mean'])
-        print('std:',self.data_interval['std'])
-        print('h:',self.data_interval['h'])
-        print('interval:',self.data_interval['interval'])
-        print(self.data_interval['table'].to_latex(),end='\n\n')
+    def _compute_h(self,std):
+        return self.t * std/np.sqrt(self.n)
 
+    def confidence_interval(self):
+        df = pd.DataFrame()
+        df['Mean'] = self.data_interval['means']
+        df['S'] = self.data_interval['stds']
+        df['h'] = [self._compute_h(s) for s in self.data_interval['stds']]
+        df['Desired'] = 0.05*df['Mean']
+        df['Low'] = df['Mean'] - df['h']
+        df['High'] = df['Mean'] + df['h']
+        self.data_interval['table'] = df
+
+    def run(self):
         print('################### 2K CONFIGURATION ###################')
         answers = self.configuration_2k()
         print(self.table_2k.to_latex(),end='\n\n')
 
         print('################### YATES ###################')
-        self.yates_algorithm(answers)
-        print(self.table_yates.to_latex())
+        self.yates_algorithm()
+        print(self.table_yates.to_latex(),end='\n\n')
+
+        print('################### CONFIDENCE INTERVAL ###################')
+        self.confidence_interval()
+        print(self.data_interval['table'].to_latex(),end='\n\n')
 
 if __name__ == '__main__':
     data = pd.read_csv('../data/final_marathon.csv')
